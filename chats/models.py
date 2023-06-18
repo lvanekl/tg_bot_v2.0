@@ -5,6 +5,7 @@ from env.default_chat_settings import *
 # Create your models here.
 class Chat(models.Model):
     chat_id = models.IntegerField()
+    created_at = models.DateTimeField(auto_now_add=True)
 
 
 class ChatSettings(models.Model):

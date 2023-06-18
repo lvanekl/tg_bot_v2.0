@@ -4,7 +4,7 @@ from .models import Chat, ChatAdministrator, ChatSettings
 
 class ChatAdmin(admin.ModelAdmin):
     model = Chat
-    list_display = ('id', 'chat_id',)
+    list_display = ('id', 'chat_id', 'created_at')
 
 
 class ChatSettingsAdmin(admin.ModelAdmin):
