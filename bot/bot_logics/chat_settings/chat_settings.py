@@ -37,7 +37,7 @@ async def toggle_boolean_field(c: CallbackQuery, button: Button, manager: Dialog
 
 
 async def toggle_language(c: CallbackQuery, button: Button, manager: DialogManager):
-    chat_id = manager.event.message.chat.id
+    chat_id = c["message"].chat.id
     chat_settings = ChatSettings.objects.get(chat__chat_id=chat_id)
 
     if chat_settings.language == 'Русский':
@@ -125,8 +125,8 @@ async def edit_poll_send_time_1(message: types.Message, state: FSMContext):
     await state.finish()
 
 
-async def get_settings_values(**kwargs):
-    chat_id = kwargs["dialog_manager"].event.message.chat.id
+async def get_settings_values(c: CallbackQuery, button: Button, manager: DialogManager):
+    chat_id = c["message"].chat.id
     chat_settings = ChatSettings.objects.get(chat__chat_id=chat_id)
     # print()
     # print('m', kwargs["dialog_manager"].__dict__)
