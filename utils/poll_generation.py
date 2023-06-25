@@ -8,7 +8,7 @@ import logging
 import aiohttp
 # import openai
 
-from env.env import openai_token, LOG_PATH, LOGGING_LEVEL
+from env.env import openai_token, LOG_PATH, LOGGING_LEVEL, PROXY_URL
 from datetime import date as Date, time as Time
 from chats.models import ChatSettings, Chat
 from trainings.models import Training, Gym
@@ -81,14 +81,14 @@ async def generate_poll(chat: Chat, training: Training) -> dict:
         if GPT_question:
             poll["question"] += f" \n({date}, {time}, {gym.name})"
         else:
-            poll["question"] = generate_default_question(date=date, time=time, gym=gym)
+            poll["question"] = generate_default_question(date=date, time=time, gym=gym.name)
 
         if not GPT_yes:
-            poll["options"][0] = generate_default_yes_option(date=date, time=time, gym=gym)
+            poll["options"][0] = generate_default_yes_option(date=date, time=time, gym=gym.name)
         if not GPT_maybe:
-            poll["options"][1] = generate_default_maybe_option(date=date, time=time, gym=gym)
+            poll["options"][1] = generate_default_maybe_option(date=date, time=time, gym=gym.name)
         if not GPT_no:
-            poll["options"][2] = generate_default_no_option(date=date, time=time, gym=gym)
+            poll["options"][2] = generate_default_no_option(date=date, time=time, gym=gym.name)
 
     print(poll)
     return poll
@@ -114,7 +114,7 @@ async def generate_poll_variants_using_chat_GPT(date: Date, time: Time, gym: Gym
     async with aiohttp.ClientSession() as session:
         while True:
             async with session.post('https://api.openai.com/v1/chat/completions',
-                                    headers=headers, json=data) as response:
+                                    headers=headers, json=data, proxy=PROXY_URL) as response:
                 answer = json.loads(await response.text())
                 if 'error' in answer:
                     print(f'an error occured {gym}: ', answer['error'])

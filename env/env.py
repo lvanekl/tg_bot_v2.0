@@ -4,6 +4,8 @@ import logging
 
 telegram_token = ""
 openai_token = ""
+PROXY_URL = None
+# PROXY_URL = 'http://proxy.server:3128'
 
 NEW_CHAT_MEME_PATH = "media/new_chat_meme.jpg"
 
