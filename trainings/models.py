@@ -8,7 +8,7 @@ class Gym(models.Model):
     address = models.CharField(max_length=255, blank=True, null=True, default=None)
 
 
-class ScheduleLine(models.Model):
+class Training(models.Model):
     chat = models.ForeignKey(Chat, on_delete=models.CASCADE)
     weekday = models.IntegerField()  # 0-6
     sport = models.CharField(max_length=255, blank=True, null=True, default=None)
@@ -16,7 +16,7 @@ class ScheduleLine(models.Model):
     time = models.TimeField()
 
 
-class ScheduleCorrection(models.Model):
+class TrainingCorrection(models.Model):
     chat = models.ForeignKey(Chat, on_delete=models.CASCADE)
     CORRECTION_TYPE_CHOISES = (
         ('move', "move"),

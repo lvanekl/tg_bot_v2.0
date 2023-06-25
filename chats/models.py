@@ -9,9 +9,9 @@ class Chat(models.Model):
 
 
 class ChatSettings(models.Model):
-    chat = models.ForeignKey(Chat, on_delete=models.CASCADE)
+    chat = models.ForeignKey(Chat, on_delete=models.CASCADE, related_name='chat_settings')
 
-    welcome_meme = models.ImageField(default=DEFAULT_WELCOME_MEME_PATH)
+    welcome_meme = models.ImageField(default=DEFAULT_WELCOME_MEME_PATH, upload_to='welcome_memes/')
 
     auto_poll = models.BooleanField(default=DEFAULT_AUTO_POLL_FLAG)
     GPT_question = models.BooleanField(default=DEFAULT_GPT_QUESTION)
@@ -28,5 +28,5 @@ class ChatSettings(models.Model):
 
 
 class ChatAdministrator(models.Model):
-    chat = models.ForeignKey(Chat, on_delete=models.CASCADE)
+    chat = models.ForeignKey(Chat, on_delete=models.CASCADE, related_name='chat_administrators')
     user_id = models.IntegerField()

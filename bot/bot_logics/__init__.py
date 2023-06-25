@@ -1,3 +1,4 @@
-import bot.bot_logics.basic_logics
-import bot.bot_logics.chat_settings_logics
-# import gyms_logics
+import bot.bot_logics.basic
+import bot.bot_logics.chat_settings
+import bot.bot_logics.gyms
+import bot.bot_logics.trainings
