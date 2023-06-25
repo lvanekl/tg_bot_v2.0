@@ -9,7 +9,7 @@ logging.basicConfig(level=LOGGING_LEVEL, filename=LOG_PATH, filemode="w",
 from chats.models import ChatSettings, ChatAdministrator, Chat
 
 permission_denied_message = f'''Похоже у вас нет доступа к этой функции. Доступ может появиться, если
-1) Вас назначат админом чата (через настрйоки чата)
+1) Вас назначат админом чата (через настройки чата)
 2) Вас назначат админом бота (через настройки бота)
 3) Кто-то из админов в настройках включит пункт everyone_is_admin
 

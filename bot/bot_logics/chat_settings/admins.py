@@ -102,7 +102,7 @@ async def remove_bot_admin(message: types.Message):
     #     chat_id=message.chat.id, user_id=current_bot_admins[0]['telegram_user_id']))
 
     remove_admin_inline_keyboard = InlineKeyboardMarkup(row_width=2)
-    print(current_bot_admins)
+    # print(current_bot_admins)
     for ba in current_bot_admins:  # ba - bot admin
         remove_admin_inline_keyboard.add(InlineKeyboardButton(f"{ba.user.username}",
                                                               callback_data=f'remove_bot_admin_{ba.user.id}_by_{remover_id}'))
@@ -127,7 +127,6 @@ async def remove_bot_admin_1(callback_query: types.CallbackQuery):
         m = await bot.send_message(chat_id=callback_query["message"].chat.id,
                                    text="Выбирать юзера для удаления должен тот же пользователь, "
                                         "который запустил процесс удаления")
-        await asyncio.sleep(3)
         await m.delete()
         return
     else:
@@ -135,7 +134,6 @@ async def remove_bot_admin_1(callback_query: types.CallbackQuery):
         await bot.send_message(chat_id=callback_query["message"].chat.id,
                                text=f'Пользователь {callback_query["message"].reply_to_message["from"]["username"]} '
                                     f'разжаловал из админов пользователя {member_username}')
-        await asyncio.sleep(3)
         await callback_query["message"].delete()
         return
 
@@ -157,12 +155,10 @@ async def remove_bot_admin_cancel(callback_query: types.CallbackQuery):
         m = await bot.send_message(chat_id=callback_query["message"].chat.id,
                                    text="Отменять процесс удаления админа должен тот же пользователь, "
                                         "который запустил процесс удаления")
-        await asyncio.sleep(3)
         await m.delete()
         return
     else:
         await bot.send_message(chat_id=callback_query["message"].chat.id,
                                text=f'Отмена удаления админа')
-        await asyncio.sleep(3)
         await callback_query["message"].delete()
         return

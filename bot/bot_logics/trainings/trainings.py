@@ -1,11 +1,14 @@
+import asyncio
 import logging
 
 from aiogram import types
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters.state import StatesGroup, State
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 from bot.bot_logics.gyms.gyms import get_gyms
 from bot.create_bot import dp, bot
+from bot.permissions import has_permission, permission_denied_message
 from chats.models import Chat
 from env.env import LOGGING_LEVEL, LOG_PATH
 from trainings.models import Training, Gym
@@ -36,8 +39,8 @@ class AddOrEditTraining(StatesGroup):
 async def trainings_logics_router(message: types.Message):
     funcs = {"get_trainings": get_trainings,  # TODO отформатировать вывод, доступы
              "add_training": add_training,  # TODO добавить ограничения, доступы
-             "remove_training": ...,  # TODO доступы
-             "edit_training": ...}  # TODO доступы
+             "remove_training": remove_training,  # TODO доступы
+             "edit_training": edit_training}  # TODO доступы
 
     command = message.get_command(pure=True)
     await funcs[command](message)
@@ -61,13 +64,21 @@ async def get_trainings(message: types.Message):
 
 
 async def add_training(message: types.Message):
-    await bot.send_message(chat_id=message.chat.id,
-                           text=f'Введите день недели \n(цифра 0-6 ИЛИ полное название ИЛИ сокращенное'
-                                f' название из двух букв, регист не важен)\n'
-                                f'Примеры: "0", "Понедельник", "Пн\n'
-                                f'Для отмены нажмите /cancel')
+    if not await has_permission(chat_id=message.chat.id, message=message):
+        await bot.send_message(chat_id=message.chat.id, text=permission_denied_message)
+        return
+    if not Gym.objects.filter(chat__chat_id=message.chat.id):
+        await bot.send_message(chat_id=message.chat.id,
+                               text=f'Вы не сможете добавить тренирвоку, потому что у вас еще не добавлен ни один зал. '
+                                    f'Воспользуйтесь командой /add_gym')
+    else:
+        await bot.send_message(chat_id=message.chat.id,
+                               text=f'Введите день недели \n(цифра 0-6 ИЛИ полное название ИЛИ сокращенное'
+                                    f' название из двух букв, регист не важен)\n'
+                                    f'Примеры: "0", "ПонеДелЬнИК", "пН"\n'
+                                    f'Для отмены нажмите /cancel')
 
-    await AddOrEditTraining.weekday.set()
+        await AddOrEditTraining.weekday.set()
 
 
 @dp.message_handler(state=AddOrEditTraining.weekday)
@@ -101,7 +112,7 @@ async def add_training_2(message: types.Message, state: FSMContext):
         else:
             await bot.send_message(chat_id=message.chat.id, text=f'Некорректный формат ввода, попробуйте еще раз')
             return
-
+    # TODO сделать выбор спортзала Inline клавиатурой
     await bot.send_message(chat_id=message.chat.id, text=f'Выберите спортзал. Для этого '
                                                          f'введите его номер в списке ниже')
     await get_gyms(message)
@@ -135,6 +146,7 @@ async def add_training_4(message: types.Message, state: FSMContext):
     await bot.send_message(chat_id=message.chat.id, text=f'Тренировка сохранена')
     await state.finish()
 
+
 # @dp.message_handler()
 # async def schedule_messages_handler(message: types.Message):
 #     funcs = {"/get_schedule": ...,
@@ -146,3 +158,71 @@ async def add_training_4(message: types.Message, state: FSMContext):
 #              "/remove_schedule_correction": ...,
 #              "/edit_schedule_correction": ...}
 #     # TODO
+
+
+async def remove_training(message: types.Message):
+    if not await has_permission(chat_id=message.chat.id, message=message):
+        await bot.send_message(chat_id=message.chat.id, text=permission_denied_message)
+        return
+    remover_id = message["from"].id
+
+    trainings = Training.objects.filter(chat__chat_id=message.chat.id).order_by('weekday')
+
+    remove_training_inline_keyboard = InlineKeyboardMarkup(row_width=2)
+
+    for tr in trainings:  # ba - bot admin
+        remove_training_inline_keyboard.insert(
+            InlineKeyboardButton(f"{day_short_names[tr.weekday]} {tr.time} ({tr.gym.name})",
+                                 callback_data=f'remove_training_{tr.id}_by_{remover_id}'))
+
+    remove_training_inline_keyboard.insert(InlineKeyboardButton(f"Отмена",
+                                                                callback_data=f'cancel_removing_training_by_{remover_id}'))
+
+    await message.reply("Выберите, какую тренировку удалить", reply_markup=remove_training_inline_keyboard)
+
+
+@dp.callback_query_handler(lambda c: c.data and c.data.startswith("remove_training_"))
+async def remove_training_1(callback_query: types.CallbackQuery):
+    training_id, remover_id = callback_query.data.replace('remove_training_', '').split('_by_')
+    training_id, remover_id = int(training_id), int(remover_id)
+
+    user_clicked_button_id = callback_query["from"]["id"]
+    if user_clicked_button_id != remover_id:
+        m = await bot.send_message(chat_id=callback_query["message"].chat.id,
+                                   text="Выбирать тренировку для удаления должен тот же пользователь, "
+                                        "который запустил процесс удаления")
+        await m.delete()
+        return
+    else:
+        tr = Training.objects.get(id=training_id)
+        await bot.send_message(chat_id=callback_query["message"].chat.id,
+                               text=f'Пользователь {callback_query["message"].reply_to_message["from"]["username"]} '
+                                    f'удалил тренировку "{tr.gym.name} {day_names[tr.weekday]} {tr.time}" из сохраненных')
+        tr.delete()
+        await callback_query["message"].delete()
+        return
+
+
+@dp.callback_query_handler(lambda c: c.data and c.data.startswith("cancel_removing_training_by_"))
+async def remove_training_cancel(callback_query: types.CallbackQuery):
+    canceler_id = int(callback_query.data.replace("cancel_removing_training_by_", ''))
+
+    user_clicked_button_id = callback_query["from"]["id"]
+
+    if user_clicked_button_id != canceler_id:
+        m = await bot.send_message(chat_id=callback_query["message"].chat.id,
+                                   text="Отменять процесс удаления тренировки должен тот же пользователь, "
+                                        "который запустил процесс удаления")
+        await m.delete()
+        return
+    else:
+        await bot.send_message(chat_id=callback_query["message"].chat.id,
+                               text=f'Отмена удаления тренировки')
+        await callback_query["message"].delete()
+        return
+
+
+async def edit_training(message: types.Message):
+    # TODO
+    await bot.send_message(chat_id=message.chat.id,
+                           text=f'Функция пока не готова, удалите тренировку и создайте новую')

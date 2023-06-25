@@ -16,6 +16,7 @@ from bot.create_bot import dp, dr, bot
 from aiogram.types import Message, CallbackQuery
 from aiogram_dialog import DialogManager, StartMode
 
+from bot.permissions import permission_denied_message, has_permission
 from chats.models import ChatSettings
 from env.default_chat_settings import DEFAULT_WELCOME_MEME_PATH, DEFAULT_POLL_SEND_TIME
 from env.env import LOGGING_LEVEL, LOG_PATH
@@ -45,12 +46,6 @@ async def toggle_language(c: CallbackQuery, button: Button, manager: DialogManag
     else:
         chat_settings.language = "Русский"
     chat_settings.save()
-
-
-async def set_send_time(c: CallbackQuery, button: Button, manager: DialogManager):
-    chat_id = c["message"].chat.id
-    chat_settings = ChatSettings.objects.get(chat__chat_id=chat_id)
-    pass
 
 
 class EditWelcomeMeme(StatesGroup):
@@ -125,8 +120,8 @@ async def edit_poll_send_time_1(message: types.Message, state: FSMContext):
     await state.finish()
 
 
-async def get_settings_values(c: CallbackQuery, button: Button, manager: DialogManager):
-    chat_id = c["message"].chat.id
+async def get_settings_values(**kwargs):
+    chat_id = kwargs["dialog_manager"].event.message.chat.id
     chat_settings = ChatSettings.objects.get(chat__chat_id=chat_id)
     # print()
     # print('m', kwargs["dialog_manager"].__dict__)
@@ -163,7 +158,7 @@ async def to_main(c: CallbackQuery, button: Button, manager: DialogManager):
 
 
 async def to_exit(c: CallbackQuery, button: Button, manager: DialogManager):
-    await manager.close_manager()
+    await manager.done()
 
 
 class Settings(StatesGroup):
@@ -237,5 +232,7 @@ dr.register(Dialog(settings_main_window,
 
 @dp.message_handler(commands=["chat_settings"])
 async def chat_settings(message: Message, dialog_manager: DialogManager):
-    # Important: always set `mode=StartMode.RESET_STACK` you don't want to stack dialogs
+    if not await has_permission(chat_id=message.chat.id, message=message):
+        await bot.send_message(chat_id=message.chat.id, text=permission_denied_message)
+        return
     await dialog_manager.start(Settings.main, mode=StartMode.RESET_STACK)

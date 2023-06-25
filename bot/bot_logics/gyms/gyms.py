@@ -8,7 +8,7 @@ from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from chats.models import Chat
 from env.env import LOG_PATH, BOT_USERNAME, LOGGING_LEVEL
 
-from bot.permissions import has_permission
+from bot.permissions import has_permission, permission_denied_message
 from bot.create_bot import bot, dp
 from trainings.models import Gym
 
@@ -53,6 +53,9 @@ async def get_gyms(message: types.Message):
 
 
 async def add_gym(message: types.Message):
+    if not await has_permission(chat_id=message.chat.id, message=message):
+        await bot.send_message(chat_id=message.chat.id, text=permission_denied_message)
+        return
     await bot.send_message(chat_id=message.chat.id, text=f'Введите имя зала')
     await AddOrEditGym.name.set()
 
@@ -75,6 +78,9 @@ async def add_gym_2(message: types.Message, state: FSMContext):
 
 
 async def remove_gym(message: types.Message):
+    if not await has_permission(chat_id=message.chat.id, message=message):
+        await bot.send_message(chat_id=message.chat.id, text=permission_denied_message)
+        return
     remover_id = message["from"].id
 
     gyms = Gym.objects.filter(chat__chat_id=message.chat.id)
@@ -101,7 +107,6 @@ async def remove_gym_1(callback_query: types.CallbackQuery):
         m = await bot.send_message(chat_id=callback_query["message"].chat.id,
                                    text="Выбирать зал для удаления должен тот же пользователь, "
                                         "который запустил процесс удаления")
-        await asyncio.sleep(3)
         await m.delete()
         return
     else:
@@ -110,14 +115,13 @@ async def remove_gym_1(callback_query: types.CallbackQuery):
                                text=f'Пользователь {callback_query["message"].reply_to_message["from"]["username"]} '
                                     f'удалил спортзал {gym.name} из сохраненных')
         gym.delete()
-        await asyncio.sleep(3)
         await callback_query["message"].delete()
         return
 
 
-@dp.callback_query_handler(lambda c: c.data and c.data.startswith("cancel_removing_gym_"))
+@dp.callback_query_handler(lambda c: c.data and c.data.startswith("cancel_removing_gym_by_"))
 async def remove_gym_cancel(callback_query: types.CallbackQuery):
-    canceler_id = int(callback_query.data.replace("cancel_removing_gym_", ''))
+    canceler_id = int(callback_query.data.replace("cancel_removing_gym_by_", ''))
 
     user_clicked_button_id = callback_query["from"]["id"]
 
@@ -125,13 +129,11 @@ async def remove_gym_cancel(callback_query: types.CallbackQuery):
         m = await bot.send_message(chat_id=callback_query["message"].chat.id,
                                    text="Отменять процесс удаления зала должен тот же пользователь, "
                                         "который запустил процесс удаления")
-        await asyncio.sleep(3)
         await m.delete()
         return
     else:
         await bot.send_message(chat_id=callback_query["message"].chat.id,
-                               text=f'Отмена удаления админа')
-        await asyncio.sleep(3)
+                               text=f'Отмена удаления зала')
         await callback_query["message"].delete()
         return
 

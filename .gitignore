@@ -2,6 +2,7 @@
 /smth_probably_userful
 /entrypoint.sh
 /Dockerfile
+/env
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
