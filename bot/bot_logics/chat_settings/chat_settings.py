@@ -116,7 +116,7 @@ async def edit_poll_send_time_1(message: types.Message, state: FSMContext):
         chat_settings.poll_send_time = Datetime.strptime(message.text, "%H:%M").time()
         chat_settings.save()
         await bot.send_message(chat_id=message.chat.id,
-                                text="Установлено новое время отправки опроса")
+                               text="Установлено новое время отправки опроса")
 
     else:
         await bot.send_message(chat_id=message.chat.id, text=f'Некорректный формат ввода, попробуйте еще раз')
@@ -158,8 +158,12 @@ async def to_other(c: CallbackQuery, button: Button, manager: DialogManager):
     await manager.dialog().switch_to(Settings.other)
 
 
-async def go_main(c: CallbackQuery, button: Button, manager: DialogManager):
+async def to_main(c: CallbackQuery, button: Button, manager: DialogManager):
     await manager.dialog().switch_to(Settings.main)
+
+
+async def to_exit(c: CallbackQuery, button: Button, manager: DialogManager):
+    await manager.close_manager()
 
 
 class Settings(StatesGroup):
@@ -176,6 +180,7 @@ settings_main_window = Window(
           Button(Const("Отправка опросов"), id="poll_send_btn", on_click=to_poll_send),
           Button(Const("Администрирование"), id="administrate_btn", on_click=to_administrate),
           Button(Const("Другое"), id="other_btn", on_click=to_other),
+          Button(Const("Выйти"), id="exit_btn", on_click=to_exit),
           width=2, ),
     state=Settings.main
 )
@@ -188,7 +193,7 @@ settings_poll_variants_window = Window(
           Button(Format('"Нет" от GPT? - {GPT_no}'), id="GPT_no_btn", on_click=toggle_boolean_field),
           Button(Format('Эмодзи? - {emoji}'), id="emoji_btn", on_click=toggle_boolean_field),
           Button(Format('Язык генерации - {language}'), id="language_btn", on_click=toggle_language),
-          Button(Const('Назад'), id="back_btn", on_click=go_main),
+          Button(Const('Назад'), id="back_btn", on_click=to_main),
           width=2, ),
     state=Settings.poll_variants,
     getter=get_settings_values,
@@ -198,7 +203,7 @@ settings_poll_send_window = Window(
     Const("Настройки отправки опросов"),
     Group(Button(Format("Время отправки - {poll_send_time}"), id="poll_send_time_btn", on_click=edit_poll_send_time),
           Button(Format('Автоотправка? - {auto_poll}'), id="auto_poll_btn", on_click=toggle_boolean_field),
-          Button(Const('Назад'), id="back_btn", on_click=go_main),
+          Button(Const('Назад'), id="back_btn", on_click=to_main),
           width=2, ),
     state=Settings.poll_send,
     getter=get_settings_values,
@@ -208,7 +213,7 @@ settings_administrate_window = Window(
     Const("Настройки администрирования"),
     Group(Button(Format("Все админы? - {everyone_is_administrator}"), id="everyone_is_administrator_btn",
                  on_click=toggle_boolean_field),
-          Button(Const('Назад'), id="back_btn", on_click=go_main),
+          Button(Const('Назад'), id="back_btn", on_click=to_main),
           width=2, ),
     state=Settings.administrate,
     getter=get_settings_values,
@@ -218,7 +223,7 @@ settings_other_window = Window(
     Const("Другие настройки (для вывода картинки-приветствия нажмите /new_member)"),
     Group(Button(Const("Поменять картинку-приветствие"), id="welcome_meme_btn",
                  on_click=edit_welcome_meme),
-          Button(Const('Назад'), id="back_btn", on_click=go_main),
+          Button(Const('Назад'), id="back_btn", on_click=to_main),
           width=2, ),
     state=Settings.other,
 )
