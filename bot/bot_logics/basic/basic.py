@@ -34,6 +34,20 @@ async def start(message: Message):
     await message.answer('''he-he lessgoooo... Тоесть... всем привет!) Чтобы узнать что я умею кликните /help''')
 
 
+@dp.message_handler(commands=["stop"])
+async def stop(message: Message):
+    chat_id = message.chat.id
+
+    all_chats = [chat.chat_id for chat in Chat.objects.all()]
+    if chat_id not in all_chats:
+        await message.answer("Ваш чат уже удален из базы данных")
+        return
+
+    Chat.objects.get(chat_id=chat_id).delete()
+
+    await message.answer('''Чат удален из базы данных''')
+
+
 @dp.message_handler(commands=["help", "conception_explanation", "gyms_help", "trainings_help", "about",
                               "chat_settings_help", "feedback_help", "training_corrections_help",
                               "training_corrections_note"])

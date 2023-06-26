@@ -18,9 +18,9 @@ class Command(BaseCommand):
         asyncio.run(self.main())
 
     async def main(self):
-        start_scheduling()
         try:
             scheduler.start()
+            start_scheduling()
             await dp.start_polling()
 
         except Exception as e:
