@@ -68,7 +68,7 @@ async def generate_poll(chat: Chat, training: Training) -> dict:
     if any([GPT_question, GPT_yes, GPT_maybe, GPT_no]):
         poll_variants = await generate_poll_variants_using_chat_GPT(date=date, time=time, gym=gym, sport=sport)
     else:
-        poll_variants = await generate_poll_variants_using_db(chat)
+        poll_variants = {}
 
     # print(datetime.datetime.now(), poll_variants)
     poll = choose_poll_variant(poll_variants)
@@ -140,14 +140,6 @@ async def generate_poll_variants_using_chat_GPT(date: Date, time: Time, gym: Gym
                         logging.error(e)
                         print('Перегенерация ответа чата гпт изза ошибки декодирования')
     return answer
-
-
-async def generate_poll_variants_using_db(telegram_chat_id: int) -> dict:
-    # TODO
-    answer_alternatives_grouped_by_types = \
-        await my_db.get_answer_alternatives_grouped_by_types(telegram_chat_id=telegram_chat_id)
-
-    return answer_alternatives_grouped_by_types
 
 
 def choose_poll_variant(poll_variants: dict) -> dict:

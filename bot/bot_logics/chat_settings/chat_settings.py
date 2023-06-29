@@ -24,6 +24,7 @@ from env.env import LOGGING_LEVEL, LOG_PATH
 logging.basicConfig(level=LOGGING_LEVEL, filename=LOG_PATH, filemode="w",
                     format="%(asctime)s %(levelname)s %(message)s", encoding='utf-8')
 
+windows_width = 1
 
 async def toggle_boolean_field(c: CallbackQuery, button: Button, manager: DialogManager):
     chat_id = c["message"].chat.id
@@ -121,7 +122,15 @@ async def edit_poll_send_time_1(message: types.Message, state: FSMContext):
 
 
 async def get_settings_values(**kwargs):
-    chat_id = kwargs["dialog_manager"].event.message.chat.id
+    event = kwargs["dialog_manager"].event
+    if isinstance(event, Message):
+        message = event
+    elif isinstance(event, CallbackQuery):
+        message = event.message
+    else:
+        message = event.message
+        print(type(event), event)
+    chat_id = message.chat.id
     chat_settings = ChatSettings.objects.get(chat__chat_id=chat_id)
     # print()
     # print('m', kwargs["dialog_manager"].__dict__)
@@ -176,7 +185,7 @@ settings_main_window = Window(
           Button(Const("Администрирование"), id="administrate_btn", on_click=to_administrate),
           Button(Const("Другое"), id="other_btn", on_click=to_other),
           Button(Const("Выйти"), id="exit_btn", on_click=to_exit),
-          width=2, ),
+          width=windows_width, ),
     state=Settings.main
 )
 
@@ -189,7 +198,7 @@ settings_poll_variants_window = Window(
           Button(Format('Эмодзи? - {emoji}'), id="emoji_btn", on_click=toggle_boolean_field),
           Button(Format('Язык генерации - {language}'), id="language_btn", on_click=toggle_language),
           Button(Const('Назад'), id="back_btn", on_click=to_main),
-          width=2, ),
+          width=windows_width, ),
     state=Settings.poll_variants,
     getter=get_settings_values,
 )
@@ -199,7 +208,7 @@ settings_poll_send_window = Window(
     Group(Button(Format("Время отправки - {poll_send_time}"), id="poll_send_time_btn", on_click=edit_poll_send_time),
           Button(Format('Автоотправка? - {auto_poll}'), id="auto_poll_btn", on_click=toggle_boolean_field),
           Button(Const('Назад'), id="back_btn", on_click=to_main),
-          width=2, ),
+          width=windows_width, ),
     state=Settings.poll_send,
     getter=get_settings_values,
 )
@@ -209,7 +218,7 @@ settings_administrate_window = Window(
     Group(Button(Format("Все админы? - {everyone_is_administrator}"), id="everyone_is_administrator_btn",
                  on_click=toggle_boolean_field),
           Button(Const('Назад'), id="back_btn", on_click=to_main),
-          width=2, ),
+          width=windows_width, ),
     state=Settings.administrate,
     getter=get_settings_values,
 )
@@ -219,7 +228,7 @@ settings_other_window = Window(
     Group(Button(Const("Поменять картинку-приветствие"), id="welcome_meme_btn",
                  on_click=edit_welcome_meme),
           Button(Const('Назад'), id="back_btn", on_click=to_main),
-          width=2, ),
+          width=windows_width, ),
     state=Settings.other,
 )
 
