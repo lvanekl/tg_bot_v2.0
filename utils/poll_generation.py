@@ -60,13 +60,14 @@ async def generate_poll(chat: Chat, training: Training) -> dict:
     date, time, gym, sport = Date.today(), training.time, training.gym, training.sport
 
     chat_settings = ChatSettings.objects.get(chat=chat.id)
-    GPT_question, GPT_yes, GPT_maybe, GPT_no, emoji = chat_settings.GPT_question, chat_settings.GPT_yes, \
-        chat_settings.GPT_maybe, chat_settings.GPT_no, chat_settings.emoji
+    GPT_question, GPT_yes, GPT_maybe, GPT_no, emoji, language = chat_settings.GPT_question, chat_settings.GPT_yes, \
+        chat_settings.GPT_maybe, chat_settings.GPT_no, chat_settings.emoji, chat_settings.language
 
     # GPT_question, GPT_yes, GPT_maybe, GPT_no, emoji = False, False, False, False, True
 
     if any([GPT_question, GPT_yes, GPT_maybe, GPT_no]):
-        poll_variants = await generate_poll_variants_using_chat_GPT(date=date, time=time, gym=gym, sport=sport)
+        poll_variants = await generate_poll_variants_using_chat_GPT(date=date, time=time, gym=gym,
+                                                                    sport=sport, language=language)
     else:
         poll_variants = {}
 
