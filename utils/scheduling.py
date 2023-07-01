@@ -40,7 +40,7 @@ async def everyday_schedule_analyzer():
             #                                             # send_time=chat_settings['poll_send_time'],
             #                                             send_time=DEFAULT_POLL_SEND_TIME, )
             task = asyncio.create_task(single_chat_analyze_and_send_poll(chat=chat,
-                                                                         send_time=chat_settings['poll_send_time'],))
+                                                                         send_time=chat_settings.poll_send_time,))
             generate_poll_tasks.append(task)
     await asyncio.gather(*generate_poll_tasks)
 
