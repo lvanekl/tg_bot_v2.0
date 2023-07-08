@@ -73,31 +73,30 @@ async def generate_poll(chat: Chat, training: Training) -> dict:
         poll_variants = {}
 
     # print(datetime.datetime.now(), poll_variants)
-    poll = choose_poll_variant(poll_variants)
 
+    poll = choose_poll_variant(poll_variants)
     # print(datetime.datetime.now(), poll)
+
+    if GPT_question:
+        poll["question"] += f" \n({date}, {time}, {gym.name})"
+    else:
+        poll["question"] = generate_default_question(date=date, time=time, gym=gym.name)
+
+    if not GPT_yes:
+        poll["options"][0] = generate_default_yes_option(date=date, time=time, gym=gym.name)
+    if not GPT_maybe:
+        poll["options"][1] = generate_default_maybe_option(date=date, time=time, gym=gym.name)
+    if not GPT_no:
+        poll["options"][2] = generate_default_no_option(date=date, time=time, gym=gym.name)
+
     if emoji:
         poll = add_emoji(poll)
-
-    if any([GPT_question, GPT_yes, GPT_maybe, GPT_no]):
-        if GPT_question:
-            poll["question"] += f" \n({date}, {time}, {gym.name})"
-        else:
-            poll["question"] = generate_default_question(date=date, time=time, gym=gym.name)
-
-        if not GPT_yes:
-            poll["options"][0] = generate_default_yes_option(date=date, time=time, gym=gym.name)
-        if not GPT_maybe:
-            poll["options"][1] = generate_default_maybe_option(date=date, time=time, gym=gym.name)
-        if not GPT_no:
-            poll["options"][2] = generate_default_no_option(date=date, time=time, gym=gym.name)
-
     print(poll)
     return poll
 
 
 async def generate_poll_variants_using_chat_GPT(date: Date, time: Time, gym: Gym, sport: str = "любой",
-                                                language: str = 'Русский') -> str:
+                                                language: str = 'Русский') -> dict:
     prompt = default_prompt
     if sport is not None:
         prompt += f". ВАЖНО: вид спорта - {sport}, поэтому не используй другие виды спорта в генерации. "
