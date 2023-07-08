@@ -8,7 +8,7 @@ import logging
 import aiohttp
 # import openai
 
-from env.env import openai_token, LOG_PATH, LOGGING_LEVEL, PROXY_URL
+from env.env import openai_token, LOG_PATH, LOGGING_LEVEL, PROXY_URL, ALLOW_CHAT_GPT
 from datetime import date as Date, time as Time
 from chats.models import ChatSettings, Chat
 from trainings.models import Training, Gym
@@ -63,7 +63,8 @@ async def generate_poll(chat: Chat, training: Training) -> dict:
     GPT_question, GPT_yes, GPT_maybe, GPT_no, emoji, language = chat_settings.GPT_question, chat_settings.GPT_yes, \
         chat_settings.GPT_maybe, chat_settings.GPT_no, chat_settings.emoji, chat_settings.language
 
-    # GPT_question, GPT_yes, GPT_maybe, GPT_no, emoji = False, False, False, False, True
+    if not ALLOW_CHAT_GPT:
+        GPT_question, GPT_yes, GPT_maybe, GPT_no = False, False, False, False
 
     if any([GPT_question, GPT_yes, GPT_maybe, GPT_no]):
         poll_variants = await generate_poll_variants_using_chat_GPT(date=date, time=time, gym=gym,
@@ -146,7 +147,7 @@ async def generate_poll_variants_using_chat_GPT(date: Date, time: Time, gym: Gym
 def choose_poll_variant(poll_variants: dict) -> dict:
     # конструкция poll_variants.get("ключ", ["..."]) нужна,
     # чтобы даже если этого ключа нет в словаре, опрос не поломался
-    question = random.choice(poll_variants.get("question", ["Идете сегодня на тренировку"]))
+    question = random.choice(poll_variants.get("question", ["Идете сегодня на тренировку?"]))
     yes_option = random.choice(poll_variants.get("yes", ["Планирую"]))
     maybe_option = random.choice(poll_variants.get("maybe", ["Возможно"]))
     no_option = random.choice(poll_variants.get("no", ["Нет("]))
@@ -171,7 +172,7 @@ def add_emoji(poll_variants: dict) -> dict:
 
 
 def generate_default_question(date: Date, time: Time, gym: str) -> str:
-    templates = [f"Прийдете {date} в {time} на тренировку в {gym}?",
+    templates = [f"Придете {date} в {time} на тренировку в {gym}?",
                  f"Как насчет тренировки в {gym} ({date} в {time})?",
                  f"Перекличка на тренировку в {gym} ({date} в {time})?",
                  f"Какие планы на вечер {date}? Есть опция собраться в {gym} в {time}"]
@@ -181,7 +182,7 @@ def generate_default_question(date: Date, time: Time, gym: str) -> str:
 
 def generate_default_yes_option(date: Date, time: Time, gym: str) -> str:
     templates = [f"Тренируюсь в {gym}",
-                 f"Прийду",
+                 f"Приду",
                  f"+1",
                  f"Поддержу тренировку своим присутствием"]
 
@@ -189,11 +190,12 @@ def generate_default_yes_option(date: Date, time: Time, gym: str) -> str:
 
 
 def generate_default_no_option(date: Date, time: Time, gym: str) -> str:
-    templates = [f"Не прийду",
+    templates = [f"Не приду",
                  f"Занят чем-то бессмысленным и бесполезным",
                  f"Я ужасный человек и не иду сегодня на тренировку",
                  f"Неправильный вариант ответа",
-                 "Нашел причину не идти сегодня (долго искал - пришлось придумать)"]
+                 "Нашел причину не идти сегодня (долго искал - пришлось придумать)",
+                 "К несчастью именно сегодня не смогу прийти"]
 
     return random.choice(templates)
 

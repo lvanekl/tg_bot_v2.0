@@ -17,6 +17,7 @@ logging.info('importing basic logics')
 
 @dp.message_handler(commands=["start"])
 async def start(message: Message):
+    if not await has_permission(chat_id=message.chat.id, message=message): return
     chat_id = message.chat.id
 
     all_chats = [chat.chat_id for chat in Chat.objects.all()]
@@ -36,6 +37,7 @@ async def start(message: Message):
 
 @dp.message_handler(commands=["stop"])
 async def stop(message: Message):
+    if not await has_permission(chat_id=message.chat.id, message=message): return
     chat_id = message.chat.id
 
     all_chats = [chat.chat_id for chat in Chat.objects.all()]
@@ -52,6 +54,7 @@ async def stop(message: Message):
                               "chat_settings_help", "feedback_help", "training_corrections_help",
                               "training_corrections_note"])
 async def help_function(message: Message):
+    if not await has_permission(chat_id=message.chat.id, message=message): return
     help_messages = {'help': base_help_message,
                      'conception_explanation': conception_explanation_message,
                      'gyms_help': gyms_help_message,
@@ -67,9 +70,7 @@ async def help_function(message: Message):
 
 @dp.message_handler(commands=['cancel'], state="*")
 async def cancel(message: Message, state: FSMContext):
-    if not await has_permission(chat_id=message.chat.id, message=message):
-        await bot.send_message(chat_id=message.chat.id, text=permission_denied_message)
-        return
+    if not await has_permission(chat_id=message.chat.id, message=message): return
     current_state = await state.get_state()
     if current_state is None:
         return

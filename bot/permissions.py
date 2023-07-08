@@ -17,8 +17,6 @@ permission_denied_message = f'''Похоже у вас нет доступа к 
 
 
 async def has_permission(chat_id: int, message: types.Message) -> bool:
-    return True
-    # TODO
     chat_admins = []
 
     if message.chat.type == "private":
@@ -26,13 +24,10 @@ async def has_permission(chat_id: int, message: types.Message) -> bool:
     if message.chat.type == "group":
         chat_admins = await bot.get_chat_administrators(message.chat.id)
 
-    chat_settings = Chat.objects.get(chat_id=chat_id).chat_settings
-    everyone_is_admin = chat_settings.everyone_is_admin
+    chat_settings = ChatSettings.objects.get(chat__chat_id=chat_id)
+    everyone_is_admin = chat_settings.everyone_is_administrator
 
-    bot_admins = [bot_admin.user_id for bot_admin in Chat.objects.get(chat_id=chat_id).chat_administrators]
-
-    # TODO убрать это сообщение, провести дебаг этой функции
-    print('permissions file: ', chat_settings, chat_admins, bot_admins)
+    bot_admins = [bot_admin.user_id for bot_admin in Chat.objects.get(chat_id=chat_id).chat_administrators.all()]
 
     user_id = message["from"]["id"]
     # print(chat_admins, chat_settings, bot_admins)

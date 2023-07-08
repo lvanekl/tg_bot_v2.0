@@ -65,7 +65,6 @@ async def get_trainings(message: types.Message):
 
 async def add_training(message: types.Message):
     if not await has_permission(chat_id=message.chat.id, message=message):
-        await bot.send_message(chat_id=message.chat.id, text=permission_denied_message)
         return
     if not Gym.objects.filter(chat__chat_id=message.chat.id):
         await bot.send_message(chat_id=message.chat.id,
@@ -162,7 +161,6 @@ async def add_training_4(message: types.Message, state: FSMContext):
 
 async def remove_training(message: types.Message):
     if not await has_permission(chat_id=message.chat.id, message=message):
-        await bot.send_message(chat_id=message.chat.id, text=permission_denied_message)
         return
     remover_id = message["from"].id
 
@@ -191,6 +189,7 @@ async def remove_training_1(callback_query: types.CallbackQuery):
         m = await bot.send_message(chat_id=callback_query["message"].chat.id,
                                    text="Выбирать тренировку для удаления должен тот же пользователь, "
                                         "который запустил процесс удаления")
+        await asyncio.sleep(2)
         await m.delete()
         return
     else:
@@ -213,6 +212,7 @@ async def remove_training_cancel(callback_query: types.CallbackQuery):
         m = await bot.send_message(chat_id=callback_query["message"].chat.id,
                                    text="Отменять процесс удаления тренировки должен тот же пользователь, "
                                         "который запустил процесс удаления")
+        await asyncio.sleep(2)
         await m.delete()
         return
     else:

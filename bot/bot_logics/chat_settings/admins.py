@@ -44,9 +44,7 @@ async def get_bot_admins(message: types.Message):
 
 
 async def add_bot_admin(message: types.Message):
-    if not await has_permission(chat_id=message.chat.id, message=message):
-        await bot.send_message(chat_id=message.chat.id, text=permission_denied_message)
-        return
+    if not await has_permission(chat_id=message.chat.id, message=message): return
 
     await AddAdmin.username.set()
     await bot.send_message(chat_id=message.chat.id,
@@ -89,9 +87,7 @@ async def add_bot_admin_1(message: types.Message, state: FSMContext):
 
 
 async def remove_bot_admin(message: types.Message):
-    if not await has_permission(chat_id=message.chat.id, message=message):
-        await bot.send_message(chat_id=message.chat.id, text=permission_denied_message)
-        return
+    if not await has_permission(chat_id=message.chat.id, message=message): return
     remover_id = message["from"].id
     current_bot_admins = [await bot.get_chat_member(chat_id=message.chat.id, user_id=bot_admin.user_id)
                           for bot_admin in ChatAdministrator.objects.filter(chat__chat_id=message.chat.id)]
@@ -127,6 +123,7 @@ async def remove_bot_admin_1(callback_query: types.CallbackQuery):
         m = await bot.send_message(chat_id=callback_query["message"].chat.id,
                                    text="Выбирать юзера для удаления должен тот же пользователь, "
                                         "который запустил процесс удаления")
+        await asyncio.sleep(2)
         await m.delete()
         return
     else:

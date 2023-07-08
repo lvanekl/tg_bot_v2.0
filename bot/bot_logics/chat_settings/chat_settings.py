@@ -26,6 +26,7 @@ logging.basicConfig(level=LOGGING_LEVEL, filename=LOG_PATH, filemode="w",
 
 windows_width = 1
 
+
 async def toggle_boolean_field(c: CallbackQuery, button: Button, manager: DialogManager):
     chat_id = c["message"].chat.id
     chat_settings = ChatSettings.objects.get(chat__chat_id=chat_id)
@@ -54,10 +55,12 @@ class EditWelcomeMeme(StatesGroup):
 
 
 async def edit_welcome_meme(c: CallbackQuery, button: Button, manager: DialogManager):
-    # callback_query["message"].chat.id,
+    # chat_id = c["message"].chat.id
+    await c["message"].delete_reply_markup()
     await bot.send_message(chat_id=c["message"].chat.id,
-                           text="Отправьте в чат новую картинку. Следующая картинка, которую отправит в чат любой пользователь, будет установлена в качестве приветственной. "
-                                "Отправьте DEFAULT чтобы установить картинку по умолчанию (она тоже очень неплоха). Чтобы отменить введите /cancel")
+                           text="Отправьте в чат новую картинку."
+                                "Отправьте DEFAULT чтобы установить картинку по умолчанию "
+                                "(она тоже очень неплоха). Чтобы отменить введите /cancel")
     await EditWelcomeMeme.picture.set()
 
 
@@ -88,7 +91,8 @@ class EditPollSendTime(StatesGroup):
 
 
 async def edit_poll_send_time(c: CallbackQuery, button: Button, manager: DialogManager):
-    # callback_query["message"].chat.id,
+    # chat_id = c["message"].chat.id
+    await c["message"].delete_reply_markup()
     await bot.send_message(chat_id=c["message"].chat.id,
                            text=f"Отправьте в чат время, во сколько должен отправляться опрос в чат (формат: HH:MM)"
                                 f"Отправьте DEFAULT чтобы установить значение по умолчанию ({DEFAULT_POLL_SEND_TIME}). Чтобы отменить введите /cancel")
@@ -241,7 +245,5 @@ dr.register(Dialog(settings_main_window,
 
 @dp.message_handler(commands=["chat_settings"])
 async def chat_settings(message: Message, dialog_manager: DialogManager):
-    if not await has_permission(chat_id=message.chat.id, message=message):
-        await bot.send_message(chat_id=message.chat.id, text=permission_denied_message)
-        return
+    if not await has_permission(chat_id=message.chat.id, message=message): return
     await dialog_manager.start(Settings.main, mode=StartMode.RESET_STACK)

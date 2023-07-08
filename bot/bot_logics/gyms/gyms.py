@@ -34,8 +34,6 @@ async def gyms_logics_router(message: types.Message):
 
     command = message.get_command(pure=True)
     await funcs[command](message)
-    # await self.my_bot.send_poll(chat_id=telegram_chat_id, **poll, is_anonymous=False)
-    # await self.my_bot.send_poll(chat_id=telegram_chat_id, **poll, is_anonymous=False)
 
 
 async def get_gyms(message: types.Message):
@@ -54,7 +52,6 @@ async def get_gyms(message: types.Message):
 
 async def add_gym(message: types.Message):
     if not await has_permission(chat_id=message.chat.id, message=message):
-        await bot.send_message(chat_id=message.chat.id, text=permission_denied_message)
         return
     await bot.send_message(chat_id=message.chat.id, text=f'Введите имя зала')
     await AddOrEditGym.name.set()
@@ -79,7 +76,6 @@ async def add_gym_2(message: types.Message, state: FSMContext):
 
 async def remove_gym(message: types.Message):
     if not await has_permission(chat_id=message.chat.id, message=message):
-        await bot.send_message(chat_id=message.chat.id, text=permission_denied_message)
         return
     remover_id = message["from"].id
 
@@ -107,6 +103,7 @@ async def remove_gym_1(callback_query: types.CallbackQuery):
         m = await bot.send_message(chat_id=callback_query["message"].chat.id,
                                    text="Выбирать зал для удаления должен тот же пользователь, "
                                         "который запустил процесс удаления")
+        await asyncio.sleep(2)
         await m.delete()
         return
     else:
@@ -129,6 +126,7 @@ async def remove_gym_cancel(callback_query: types.CallbackQuery):
         m = await bot.send_message(chat_id=callback_query["message"].chat.id,
                                    text="Отменять процесс удаления зала должен тот же пользователь, "
                                         "который запустил процесс удаления")
+        await asyncio.sleep(2)
         await m.delete()
         return
     else:
