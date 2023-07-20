@@ -18,10 +18,11 @@ class Command(BaseCommand):
         asyncio.run(self.main())
 
     async def main(self):
-        try:
-            scheduler.start()
-            start_scheduling()
-            await dp.start_polling()
+        while True:
+            try:
+                scheduler.start()
+                start_scheduling()
+                await dp.start_polling()
 
-        except Exception as e:
-            raise e
+            except Exception as e:
+                logging.error(e)
